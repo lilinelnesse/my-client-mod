@@ -63,7 +63,7 @@ public final class BlockHighlighter {
         int range = ModuleManager.HL_RANGE.get();
         BlockPos center = client.player.getBlockPos();
         int minY = Math.max(center.getY() - range, world.getBottomY());
-        int maxY = Math.min(center.getY() + range, world.getTopY() - 1);
+        int maxY = Math.min(center.getY() + range, world.getBottomY() + world.getHeight() - 1);
 
         List<BlockPos> result = new ArrayList<>();
         BlockPos.Mutable pos = new BlockPos.Mutable();

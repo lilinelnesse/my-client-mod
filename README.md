@@ -15,10 +15,20 @@ Fabric is the usual choice for client mods: it's lightweight, updates fast, and 
    - IntelliJ: use the generated `Minecraft Client` run config, or
    - Terminal: `./gradlew runClient` (Windows: `gradlew.bat runClient`)
 3. In-game, press **G** to see the sample keybind message. Check the log for "mixin hook works".
-4. Build a jar to install in a normal launcher: `./gradlew build` -> `build/libs/my-client-mod-1.0.0.jar`
+4. Build a jar to install in a normal launcher: `./gradlew build` -> `build/libs/my-client-mod-1.1.0.jar`
    (drop it in a Fabric profile's `mods/` folder along with Fabric API).
 
+## In-game module menu
+Press **Right Shift** in-game (rebindable under Controls -> My Client Mod) to open the menu.
+Each module is a toggle button; settings are saved to `config/myclientmod.properties`.
+Included modules: Coordinates HUD, FPS Counter, Auto Sprint.
+
+To add your own module: add a `new Module(...)` to `ModuleManager.java` (and to its `ALL` list),
+then check `YourModule.isEnabled()` wherever it should do something (a tick event, the HUD, or a mixin).
+
 ## Layout
+- `src/main/java/com/example/clientmod/gui/ModMenuScreen.java`: the in-game menu screen
+- `src/main/java/com/example/clientmod/module/`: `Module` and `ModuleManager` (list of toggles + saving)
 - `src/main/java/com/example/clientmod/MyClientMod.java`: client entrypoint (events, keybinds, HUD, etc.)
 - `src/main/java/com/example/clientmod/mixin/`: Mixins that modify vanilla code
 - `src/main/resources/fabric.mod.json`: mod metadata and entrypoints

@@ -99,8 +99,8 @@ public final class BlockHighlighter {
                 continue;
             }
             Identifier id = Identifier.tryParse(name);
-            if (id != null) {
-                Registries.BLOCK.getOrEmpty(id).ifPresent(blocks::add);
+            if (id != null && Registries.BLOCK.containsId(id)) {
+                blocks.add(Registries.BLOCK.get(id));
             }
         }
         return blocks;

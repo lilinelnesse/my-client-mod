@@ -1,10 +1,16 @@
 package com.example.clientmod.module;
 
-/** A single toggleable feature shown in the in-game menu. */
+import com.example.clientmod.module.setting.Setting;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/** A single toggleable feature shown in the in-game menu, with optional settings. */
 public class Module {
     private final String id;
     private final String name;
     private final String description;
+    private final List<Setting> settings = new ArrayList<>();
     private boolean enabled;
 
     public Module(String id, String name, String description, boolean enabledByDefault) {
@@ -14,9 +20,17 @@ public class Module {
         this.enabled = enabledByDefault;
     }
 
+    /** Registers a setting on this module and returns it, so it can be kept in a field. */
+    public <T extends Setting> T add(T setting) {
+        settings.add(setting);
+        return setting;
+    }
+
     public String getId() { return id; }
     public String getName() { return name; }
     public String getDescription() { return description; }
+    public List<Setting> getSettings() { return settings; }
+    public boolean hasSettings() { return !settings.isEmpty(); }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 

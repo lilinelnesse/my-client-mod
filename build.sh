@@ -8,4 +8,4 @@ if [ ! -f gradlew ]; then
 fi
 ./gradlew build
 echo
-echo "Done. Your jar: build/libs/my-client-mod-1.1.0.jar"
+echo "Done. Your jar: build/libs/my-client-mod-1.2.0.jar"

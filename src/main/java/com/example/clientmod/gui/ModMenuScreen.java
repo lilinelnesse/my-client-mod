@@ -10,9 +10,11 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-/** The in-game menu (press Right Shift) with one toggle button per module. */
+/** The in-game menu (press Right Shift): one toggle per module, plus a Settings button where available. */
 public class ModMenuScreen extends Screen {
-    private static final int BUTTON_WIDTH = 200;
+    private static final int TOGGLE_WIDTH = 150;
+    private static final int SETTINGS_WIDTH = 66;
+    private static final int GAP = 4;
     private static final int BUTTON_HEIGHT = 20;
     private static final int SPACING = 24;
 
@@ -22,24 +24,31 @@ public class ModMenuScreen extends Screen {
 
     @Override
     protected void init() {
+        int rowWidth = TOGGLE_WIDTH + GAP + SETTINGS_WIDTH;
         int count = ModuleManager.ALL.size();
         int totalHeight = count * SPACING + SPACING; // modules + Done button
-        int x = this.width / 2 - BUTTON_WIDTH / 2;
-        int y = this.height / 2 - totalHeight / 2 + 10;
+        int x = this.width / 2 - rowWidth / 2;
+        int y = Math.max(40, this.height / 2 - totalHeight / 2 + 10);
 
         for (Module module : ModuleManager.ALL) {
-            ButtonWidget button = ButtonWidget.builder(label(module), btn -> {
+            ButtonWidget toggle = ButtonWidget.builder(label(module), btn -> {
                 module.toggle();
                 btn.setMessage(label(module));
                 ModuleManager.save();
-            }).dimensions(x, y, BUTTON_WIDTH, BUTTON_HEIGHT).build();
-            button.setTooltip(Tooltip.of(Text.literal(module.getDescription())));
-            this.addDrawableChild(button);
+            }).dimensions(x, y, TOGGLE_WIDTH, BUTTON_HEIGHT).build();
+            toggle.setTooltip(Tooltip.of(Text.literal(module.getDescription())));
+            this.addDrawableChild(toggle);
+
+            if (module.hasSettings()) {
+                this.addDrawableChild(ButtonWidget.builder(Text.literal("Settings"),
+                        btn -> this.client.setScreen(new ModuleSettingsScreen(this, module)))
+                        .dimensions(x + TOGGLE_WIDTH + GAP, y, SETTINGS_WIDTH, BUTTON_HEIGHT).build());
+            }
             y += SPACING;
         }
 
         this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, btn -> this.close())
-                .dimensions(x, y + 6, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+                .dimensions(x, y + 6, rowWidth, BUTTON_HEIGHT).build());
     }
 
     private static Text label(Module module) {

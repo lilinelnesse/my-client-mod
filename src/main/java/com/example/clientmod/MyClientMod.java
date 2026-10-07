@@ -1,13 +1,16 @@
 package com.example.clientmod;
 
+import com.example.clientmod.feature.BlockHighlighter;
+import com.example.clientmod.feature.Fullbright;
+import com.example.clientmod.feature.Hud;
 import com.example.clientmod.gui.ModMenuScreen;
 import com.example.clientmod.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -15,8 +18,6 @@ import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Locale;
 
 public class MyClientMod implements ClientModInitializer {
     public static final String MOD_ID = "myclientmod";
@@ -27,7 +28,7 @@ public class MyClientMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("My Client Mod 1.1.0 loaded (module menu build)");
+        LOGGER.info("My Client Mod 1.2.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
 
         ModuleManager.load();
 
@@ -60,9 +61,12 @@ public class MyClientMod implements ClientModInitializer {
             }
 
             tickAutoSprint(client);
+            Fullbright.tick(client);
+            BlockHighlighter.tick(client);
         });
 
-        HudRenderCallback.EVENT.register((context, tickCounter) -> renderHud(context));
+        HudRenderCallback.EVENT.register((context, tickCounter) -> Hud.render(context));
+        WorldRenderEvents.LAST.register(BlockHighlighter::render);
     }
 
     private static void tickAutoSprint(MinecraftClient client) {
@@ -78,28 +82,6 @@ public class MyClientMod implements ClientModInitializer {
                 && !player.horizontalCollision
                 && player.getHungerManager().getFoodLevel() > 6) {
             player.setSprinting(true);
-        }
-    }
-
-    private static void renderHud(DrawContext context) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || client.options.hudHidden) {
-            return;
-        }
-
-        int x = 4;
-        int y = 4;
-
-        if (ModuleManager.FPS.isEnabled()) {
-            context.drawTextWithShadow(client.textRenderer,
-                    Text.literal("FPS: " + client.getCurrentFps()), x, y, 0xFFFFFF);
-            y += 10;
-        }
-
-        if (ModuleManager.COORDS.isEnabled()) {
-            String coords = String.format(Locale.ROOT, "XYZ: %.1f / %.1f / %.1f",
-                    client.player.getX(), client.player.getY(), client.player.getZ());
-            context.drawTextWithShadow(client.textRenderer, Text.literal(coords), x, y, 0xFFFFFF);
         }
     }
 }

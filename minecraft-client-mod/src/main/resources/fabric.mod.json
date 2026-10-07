@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "myclientmod",
+  "version": "${version}",
+  "name": "My Client Mod",
+  "description": "A custom client-side mod.",
+  "authors": ["You"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.example.clientmod.MyClientMod"]
+  },
+  "mixins": ["myclientmod.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

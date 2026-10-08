@@ -51,7 +51,7 @@ public final class ModuleManager {
 
     // --- Block highlighter ---
     public static final Module HIGHLIGHT = new Module("highlight", "Block Highlight",
-            "Outlines the blocks you choose near you.", false);
+            "Outlines the blocks you choose that are near you and visible.", false);
     public static final StringSetting HL_BLOCKS = HIGHLIGHT.add(new StringSetting("blocks", "Blocks (comma separated)",
             "diamond_ore,deepslate_diamond_ore,ancient_debris"));
     public static final ChoiceSetting HL_COLOR =
@@ -60,8 +60,6 @@ public final class ModuleManager {
             HIGHLIGHT.add(new IntSetting("range", "Range", 8, 32, 16));
     public static final IntSetting HL_MAX =
             HIGHLIGHT.add(new IntSetting("max", "Max blocks", 50, 1000, 300));
-    public static final BoolSetting HL_THROUGH_WALLS =
-            HIGHLIGHT.add(new BoolSetting("walls", "See through walls", true));
 
     // --- Fullbright ---
     public static final Module FULLBRIGHT = new Module("fullbright", "Fullbright",

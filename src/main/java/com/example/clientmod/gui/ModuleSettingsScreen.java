@@ -18,7 +18,7 @@ import net.minecraft.text.Text;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Settings page for one module. Builds one widget per setting. Saved when closed. */
+/** Settings page for one module. Builds one widget per setting. Saved when you press Done or Esc. */
 public class ModuleSettingsScreen extends Screen {
     private static final int WIDTH = 240;
     private static final int ROW = 24;
@@ -101,12 +101,8 @@ public class ModuleSettingsScreen extends Screen {
 
     @Override
     public void close() {
-        this.client.setScreen(parent);
-    }
-
-    @Override
-    public void removed() {
         ModuleManager.save();
+        this.client.setScreen(parent);
     }
 
     /** A slider that edits an IntSetting. */

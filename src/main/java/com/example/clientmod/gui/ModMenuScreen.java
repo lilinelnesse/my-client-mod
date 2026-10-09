@@ -113,7 +113,7 @@ public class ModMenuScreen extends Screen {
     private void panel(DrawContext context, int x, int y, int w, int h) {
         context.fill(x + 2, y + 2, x + w + 2, y + h + 2, 0x50000000);
         context.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0xFF2A2A2A);
-        panel(context, x, y, w, h);
+        context.fill(x, y, x + w, y + h, PANEL_BG);
     }
 
     private int drawHeader(DrawContext context, String title, int x, int y, int w) {
@@ -173,7 +173,7 @@ public class ModMenuScreen extends Screen {
                 }
             }
         }
-        context.fill(x, y, x + w, y + h, PANEL_BG);
+        panel(context, x, y, w, h);
         int cy = drawHeader(context, category, x, y, w);
 
         for (Module m : modules) {

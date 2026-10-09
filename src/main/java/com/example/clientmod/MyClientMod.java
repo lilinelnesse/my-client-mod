@@ -28,7 +28,7 @@ public class MyClientMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("My Client Mod 1.4.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
+        LOGGER.info("My Client Mod 1.4.1 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
 
         ModuleManager.load();
 

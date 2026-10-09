@@ -1,6 +1,7 @@
 package com.example.clientmod.gui;
 
 import com.example.clientmod.module.ModuleManager;
+import com.example.clientmod.module.setting.StringSetting;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -17,6 +18,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /** Search for blocks by name and click their pictures to choose which ones get highlighted. */
 public class BlockPickerScreen extends Screen {
@@ -27,6 +29,8 @@ public class BlockPickerScreen extends Screen {
     private static List<Entry> allEntries = null;
 
     private final Screen parent;
+    private final StringSetting setting;
+    private final Predicate<Block> filter;
     private final Set<String> selected = new LinkedHashSet<>();
     private List<Entry> results = new ArrayList<>();
     private String query = "";
@@ -37,9 +41,16 @@ public class BlockPickerScreen extends Screen {
     private Entry hovered = null;
 
     public BlockPickerScreen(Screen parent) {
-        super(Text.literal("Choose blocks"));
+        this(parent, ModuleManager.HL_BLOCKS, b -> true, "Choose blocks to highlight");
+    }
+
+    /** A picker for any block-list setting; only blocks accepted by the filter can be searched. */
+    public BlockPickerScreen(Screen parent, StringSetting setting, Predicate<Block> filter, String title) {
+        super(Text.literal(title));
         this.parent = parent;
-        for (String part : ModuleManager.HL_BLOCKS.get().split(",")) {
+        this.setting = setting;
+        this.filter = filter;
+        for (String part : setting.get().split(",")) {
             String s = part.trim().toLowerCase(Locale.ROOT);
             if (!s.isEmpty()) {
                 selected.add(s.contains(":") ? s : "minecraft:" + s);
@@ -107,7 +118,7 @@ public class BlockPickerScreen extends Screen {
                     break;
                 }
             }
-            if (!match) {
+            if (!match || !filter.test(Registries.BLOCK.get(e.id()))) {
                 continue;
             }
             if (query.isBlank() && selected.contains(e.id().toString())) {
@@ -133,7 +144,7 @@ public class BlockPickerScreen extends Screen {
         context.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xF0151515);
         context.fill(panelX, panelY, panelX + panelW, panelY + 17, 0xF00F0F0F);
         context.fill(panelX, panelY + 16, panelX + panelW, panelY + 17, accent());
-        context.drawTextWithShadow(textRenderer, "Choose blocks to highlight", panelX + 6, panelY + 5, 0xFFFFFFFF);
+        context.drawTextWithShadow(textRenderer, this.title.getString(), panelX + 6, panelY + 5, 0xFFFFFFFF);
         String count = selected.size() + " selected";
         context.drawTextWithShadow(textRenderer, count, panelX + panelW - 6 - textRenderer.getWidth(count),
                 panelY + 5, accent());
@@ -213,7 +224,7 @@ public class BlockPickerScreen extends Screen {
             }
             sb.append(id.startsWith("minecraft:") ? id.substring("minecraft:".length()) : id);
         }
-        ModuleManager.HL_BLOCKS.set(sb.toString());
+        setting.set(sb.toString());
     }
 
     @Override

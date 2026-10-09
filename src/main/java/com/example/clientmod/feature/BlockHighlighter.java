@@ -39,6 +39,16 @@ public final class BlockHighlighter {
 
     private BlockHighlighter() {}
 
+    /** Blocks currently found near the player (empty unless Block Highlight is on). */
+    public static List<BlockPos> getFound() {
+        return found;
+    }
+
+    /** True if this block is one of the blocks chosen in the Block Highlight settings. */
+    public static boolean isTarget(Block block) {
+        return targets.contains(block);
+    }
+
     /** Called every client tick: rescans the area around the player about once a second. */
     public static void tick(MinecraftClient client) {
         ClientWorld world = client.world;

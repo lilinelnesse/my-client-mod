@@ -29,7 +29,7 @@ public final class ModuleManager {
     public static final List<String> CATEGORIES = List.of("HUD", "Render", "Utility");
 
     /** Accent color of the menu (index into COLOR_RGB). Saved in the main config, not in profiles. */
-    public static final int DEFAULT_HUE = 340, DEFAULT_SAT = 82, DEFAULT_VIB = 100;
+    public static final int DEFAULT_HUE = 345, DEFAULT_SAT = 91, DEFAULT_VIB = 100;
     public static final IntSetting GUI_HUE = new IntSetting("hue", "Hue", 0, 360, DEFAULT_HUE);
     public static final IntSetting GUI_SAT = new IntSetting("sat", "Saturation", 0, 100, DEFAULT_SAT);
     public static final IntSetting GUI_VIB = new IntSetting("vib", "Vibrance", 0, 100, DEFAULT_VIB);
@@ -117,6 +117,18 @@ public final class ModuleManager {
     public static final ChoiceSetting NF_CORNER =
             NETHERITE.add(new ChoiceSetting("corner", "Info corner", CORNERS, 1));
 
+    // --- Storage ESP ---
+    public static final Module STORAGE_ESP = new Module("storageesp", "Storage ESP",
+            "Outlines the chests, barrels and other storage you choose.", "Render", false);
+    public static final StringSetting SE_BLOCKS = STORAGE_ESP.add(new StringSetting("blocks", "Storage blocks",
+            "chest,trapped_chest,barrel,ender_chest"));
+    public static final ChoiceSetting SE_COLOR =
+            STORAGE_ESP.add(new ChoiceSetting("color", "Color", COLOR_NAMES, 3));
+    public static final IntSetting SE_RANGE =
+            STORAGE_ESP.add(new IntSetting("range", "Range", 8, 128, 64));
+    public static final BoolSetting SE_THROUGH_WALLS =
+            STORAGE_ESP.add(new BoolSetting("walls", "See through walls", true));
+
     // --- Fullbright ---
     public static final Module FULLBRIGHT = new Module("fullbright", "Fullbright",
             "Makes everything fully bright, even in caves and at night.", "Render", false);
@@ -125,8 +137,18 @@ public final class ModuleManager {
     public static final Module AUTO_SPRINT = new Module("autosprint", "Auto Sprint",
             "Sprints automatically while you hold forward.", "Utility", false);
 
+    // --- Auto mine ---
+    public static final Module AUTO_MINE = new Module("automine", "Auto Mine",
+            "Walks to and mines the Block Highlight blocks (turn Block Highlight on too).", "Utility", false);
+    public static final IntSetting AM_MIN_HEALTH =
+            AUTO_MINE.add(new IntSetting("minhealth", "Stop below health", 0, 19, 6));
+    public static final BoolSetting AM_WALK =
+            AUTO_MINE.add(new BoolSetting("walk", "Walk to blocks", true));
+    public static final BoolSetting AM_LOOK =
+            AUTO_MINE.add(new BoolSetting("look", "Look at blocks", true));
+
     public static final List<Module> ALL = List.of(
-            COORDS, FPS, ARMOR_HUD, HIGHLIGHT, NETHERITE, FULLBRIGHT, AUTO_SPRINT);
+            COORDS, FPS, ARMOR_HUD, HIGHLIGHT, NETHERITE, STORAGE_ESP, FULLBRIGHT, AUTO_SPRINT, AUTO_MINE);
 
     private ModuleManager() {}
 

@@ -1,9 +1,11 @@
 package com.example.clientmod;
 
+import com.example.clientmod.feature.AutoMine;
 import com.example.clientmod.feature.BlockHighlighter;
 import com.example.clientmod.feature.Fullbright;
 import com.example.clientmod.feature.Hud;
 import com.example.clientmod.feature.NetheriteFinder;
+import com.example.clientmod.feature.StorageEsp;
 import com.example.clientmod.gui.ModMenuScreen;
 import com.example.clientmod.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -29,7 +31,7 @@ public class MyClientMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("My Client Mod 1.7.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
+        LOGGER.info("My Client Mod 1.11.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
 
         ModuleManager.load();
 
@@ -65,11 +67,14 @@ public class MyClientMod implements ClientModInitializer {
             Fullbright.tick(client);
             BlockHighlighter.tick(client);
             NetheriteFinder.tick(client);
+            AutoMine.tick(client);
+            StorageEsp.tick(client);
         });
 
         HudRenderCallback.EVENT.register((context, tickCounter) -> Hud.render(context));
         WorldRenderEvents.LAST.register(BlockHighlighter::render);
         WorldRenderEvents.LAST.register(NetheriteFinder::render);
+        WorldRenderEvents.LAST.register(StorageEsp::render);
     }
 
     private static void tickAutoSprint(MinecraftClient client) {

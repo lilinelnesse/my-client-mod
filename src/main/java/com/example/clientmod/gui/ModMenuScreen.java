@@ -24,11 +24,11 @@ import java.util.function.DoubleConsumer;
  * Left-click a module to toggle it, right-click (or the three dots) to open its settings.
  */
 public class ModMenuScreen extends Screen {
-    private static final int PANEL_BG = 0xFF161616;
-    private static final int HEADER_BG = 0xFF111111;
-    private static final int ROW_HOVER = 0x30FFFFFF;
+    private static final int PANEL_BG = 0xFF1A1A1A;
+    private static final int HEADER_BG = 0xFF141414;
+    private static final int ROW_HOVER = 0x18FFFFFF;
     private static final int TEXT = 0xFFFFFFFF;
-    private static final int DIM = 0xFF9A9A9A;
+    private static final int DIM = 0xFFB8B8B8;
     private static final int ROW_H = 22;
     private static final int SETTING_H = 16;
     private static final int SLIDER_H = 22;
@@ -87,16 +87,16 @@ public class ModMenuScreen extends Screen {
         context.fill(0, 0, width, height, 0x60000000);
 
         int n = ModuleManager.CATEGORIES.size() + 2;
-        int pw = Math.max(100, Math.min(128, (width - 16 - (n - 1) * 4) / n));
-        int total = n * pw + (n - 1) * 4;
+        int pw = Math.max(100, Math.min(128, (width - 16 - (n - 1) * 3) / n));
+        int total = n * pw + (n - 1) * 3;
         int x = (width - total) / 2;
-        int y = Math.max(8, (height - 220) / 4);
+        int y = Math.max(8, (height - 250) / 4);
 
         drawSettingsPanel(context, x, y, pw, mouseX, mouseY);
-        x += pw + 4;
+        x += pw + 3;
         for (String category : ModuleManager.CATEGORIES) {
             drawCategoryPanel(context, category, x, y, pw, mouseX, mouseY);
-            x += pw + 4;
+            x += pw + 3;
         }
         drawProfilesPanel(context, x, y, pw, mouseX, mouseY);
 
@@ -109,14 +109,60 @@ public class ModMenuScreen extends Screen {
         }
     }
 
-    /** Flat dark panel. */
+    /** Rounded-corner rectangle (radius 6): top and/or bottom corners can be rounded. */
+    private void rrect(DrawContext context, int x, int y, int w, int h, int color, boolean top, boolean bottom) {
+        int[] inset = {4, 2, 1, 1, 0, 0};
+        for (int row = 0; row < h; row++) {
+            int in = 0;
+            if (top && row < inset.length) {
+                in = inset[row];
+            }
+            if (bottom && h - 1 - row < inset.length) {
+                in = Math.max(in, inset[h - 1 - row]);
+            }
+            context.fill(x + in, y + row, x + w - in, y + row + 1, color);
+        }
+    }
+
     private void panel(DrawContext context, int x, int y, int w, int h) {
-        context.fill(x, y, x + w, y + h, PANEL_BG);
+        rrect(context, x, y, w, h, PANEL_BG, true, true);
+    }
+
+    private static final String[] ICON_HUD = {
+            "#########", "#.......#", "#.#####.#", "#.......#", "#.###...#", "#.......#", "#########"};
+    private static final String[] ICON_RENDER = {
+            "..#####..", ".#.....#.", "#..###..#", "#.#####.#", "#..###..#", ".#.....#.", "..#####.."};
+    private static final String[] ICON_UTILITY = {
+            "##.....##", ".##...##.", "..##.##..", "...###...", "..##.##..", ".##...##.", "##.....##"};
+    private static final String[] ICON_PROFILES = {
+            "#########", ".........", "#########", ".........", "#####...."};
+    private static final String[] ICON_DEFAULT = {
+            ".#######.", "#.......#", "#.#.#.#.#", "#.......#", ".#######."};
+
+    private static String[] iconFor(String title) {
+        return switch (title) {
+            case "HUD" -> ICON_HUD;
+            case "Render" -> ICON_RENDER;
+            case "Utility" -> ICON_UTILITY;
+            case "Profiles" -> ICON_PROFILES;
+            default -> ICON_DEFAULT;
+        };
+    }
+
+    private void icon(DrawContext context, int x, int y, String[] rows, int color) {
+        for (int r = 0; r < rows.length; r++) {
+            for (int c = 0; c < rows[r].length(); c++) {
+                if (rows[r].charAt(c) == '#') {
+                    context.fill(x + c, y + r, x + c + 1, y + r + 1, color);
+                }
+            }
+        }
     }
 
     private int drawHeader(DrawContext context, String title, int x, int y, int w) {
-        context.fill(x, y, x + w, y + HEADER_H, HEADER_BG);
-        context.drawTextWithShadow(textRenderer, title, x + 8, y + 8, TEXT);
+        rrect(context, x, y, w, HEADER_H, HEADER_BG, true, false);
+        icon(context, x + 8, y + 8, iconFor(title), TEXT);
+        context.drawTextWithShadow(textRenderer, title, x + 22, y + 8, TEXT);
         return y + HEADER_H;
     }
 
@@ -132,25 +178,33 @@ public class ModMenuScreen extends Screen {
 
     /** A gradient slider (colors come from the gradient function) bound to an IntSetting. */
     private int drawColorSlider(DrawContext context, String label, IntSetting setting, int x, int y, int w,
-                                java.util.function.IntUnaryOperator gradient, boolean showReset) {
-        context.drawTextWithShadow(textRenderer, label, x + 8, y, TEXT);
+                                java.util.function.IntUnaryOperator gradient, boolean showReset, boolean ringKnob) {
+        if (label != null) {
+            context.drawTextWithShadow(textRenderer, label, x + 8, y, DIM);
+        }
         if (showReset) {
             String reset = "RESET";
             int rx = x + w - 8 - textRenderer.getWidth(reset);
-            context.drawTextWithShadow(textRenderer, reset, rx, y, DIM);
+            context.drawTextWithShadow(textRenderer, reset, rx, y, 0xFF8A8A8A);
             addHit(rx - 2, y - 3, x + w - 6, y + 11, (cx, b) -> {
                 ModuleManager.resetAccent();
                 markDirty();
             }, null);
         }
-        int sx = x + 8, sw = w - 16, sy = y + 15;
+        int sx = x + 10, sw = w - 20;
+        int sy = label != null ? y + 16 : y + 5;
         for (int i = 0; i < sw; i++) {
             int rgb = gradient.applyAsInt(i * 1000 / Math.max(1, sw - 1));
-            context.fill(sx + i, sy, sx + i + 1, sy + 3, 0xFF000000 | rgb);
+            context.fill(sx + i, sy, sx + i + 1, sy + 2, 0xFF000000 | rgb);
         }
         double frac = (setting.get() - setting.getMin()) / (double) (setting.getMax() - setting.getMin());
         int kx = sx + (int) Math.round(frac * (sw - 1));
-        circle(context, kx, sy + 1, 5, 0xFFE8E8E8);
+        if (ringKnob) {
+            circle(context, kx, sy, 5, 0xFF000000 | ModuleManager.hsb(setting.get(), 100, 100));
+            circle(context, kx, sy, 3, 0xFF1A1A1A);
+        } else {
+            circle(context, kx, sy, 5, 0xFFE9E9E9);
+        }
         DoubleConsumer setter = m -> {
             double f = Math.max(0, Math.min(1, (m - sx) / (double) (sw - 1)));
             int val = setting.getMin() + (int) Math.round(f * (setting.getMax() - setting.getMin()));
@@ -159,40 +213,56 @@ public class ModMenuScreen extends Screen {
                 markDirty();
             }
         };
-        addHit(x, y + 8, x + w, y + 26, (cx, b) -> setter.accept(cx), setter);
-        return y + 30;
+        addHit(x, sy - 8, x + w, sy + 9, (cx, b) -> setter.accept(cx), setter);
+        return label != null ? y + 30 : y + 16;
     }
 
+    private static final String[] NAV_ROWS = {"General", "Modules", "GUI", "Sound", "Notifications"};
+
     private void drawSettingsPanel(DrawContext context, int x, int y, int w, int mx, int my) {
-        int h = HEADER_H + 8 + 14 + 30 + 34 + 34 + 24;
+        int h = HEADER_H + NAV_ROWS.length * ROW_H + 26 + 16 + 96 + 26 + 6;
         panel(context, x, y, w, h);
-        int cy = drawHeader(context, "Settings", x, y, w);
-        // back-circle icon on the left, close button on the right
-        context.fill(x, y, x + w, y + HEADER_H, HEADER_BG);
-        circle(context, x + 14, y + HEADER_H / 2, 7, 0xFF2A2A2A);
-        context.drawTextWithShadow(textRenderer, "<", x + 12, y + 8, DIM);
-        context.drawTextWithShadow(textRenderer, "Settings", x + 28, y + 8, TEXT);
-        context.drawTextWithShadow(textRenderer, "x", x + w - 12, y + 8, DIM);
-        addHit(x + w - 20, y, x + w, y + HEADER_H, (cx, b) -> close(), null);
 
-        cy += 8;
-        context.drawTextWithShadow(textRenderer, "GUI Theme", x + 8, cy, DIM);
-        context.fill(x + w - 20, cy - 1, x + w - 10, cy + 9, accent());
-        cy += 14;
+        // header: round back button, title, close
+        rrect(context, x, y, w, HEADER_H, HEADER_BG, true, false);
+        circle(context, x + 15, y + HEADER_H / 2, 7, 0xFF2C2C2C);
+        context.drawTextWithShadow(textRenderer, "<", x + 13, y + 8, TEXT);
+        context.drawTextWithShadow(textRenderer, "Settings", x + 29, y + 8, TEXT);
+        context.drawTextWithShadow(textRenderer, "x", x + w - 13, y + 8, DIM);
+        addHit(x + w - 22, y, x + w, y + HEADER_H, (cx, b) -> close(), null);
 
-        cy = drawColorSlider(context, "Custom color", ModuleManager.GUI_HUE, x, cy, w,
-                v -> ModuleManager.hsb(v * 360 / 1000, 100, 100), true);
+        int cy = y + HEADER_H;
+        for (String name : NAV_ROWS) {
+            boolean hover = mx >= x && mx < x + w && my >= cy && my < cy + ROW_H;
+            if (hover) {
+                context.fill(x, cy, x + w, cy + ROW_H, ROW_HOVER);
+            }
+            context.drawTextWithShadow(textRenderer, name, x + 8, cy + 7, DIM);
+            context.drawTextWithShadow(textRenderer, ">", x + w - 14, cy + 7, 0xFF777777);
+            cy += ROW_H;
+        }
+
+        // GUI Theme section
+        context.drawTextWithShadow(textRenderer, "GUI Theme", x + 8, cy + 7, DIM);
+        context.drawTextWithShadow(textRenderer, "^", x + 8 + textRenderer.getWidth("GUI Theme") + 5, cy + 7, DIM);
+        rrect(context, x + w - 18, cy + 6, 10, 10, accent(), true, true);
+        cy += 22 + 4;
+
+        cy = drawColorSlider(context, null, ModuleManager.GUI_HUE, x, cy, w,
+                v -> ModuleManager.hsb(v * 360 / 1000, 100, 100), false, true);
         final int hue = ModuleManager.GUI_HUE.get();
-        cy = drawColorSlider(context, "Saturation", ModuleManager.GUI_SAT, x, cy + 4, w,
-                v -> ModuleManager.hsb(hue, v / 10, 100), false);
-        cy = drawColorSlider(context, "Vibrance", ModuleManager.GUI_VIB, x, cy + 4, w,
-                v -> ModuleManager.hsb(hue, ModuleManager.GUI_SAT.get(), v / 10), false);
+        cy = drawColorSlider(context, "Custom color", ModuleManager.GUI_HUE, x, cy + 2, w,
+                v -> ModuleManager.hsb(v * 360 / 1000, 100, 100), true, false);
+        cy = drawColorSlider(context, "Saturation", ModuleManager.GUI_SAT, x, cy + 2, w,
+                v -> ModuleManager.hsb(hue, v / 10, 100), false, false);
+        cy = drawColorSlider(context, "Vibrance", ModuleManager.GUI_VIB, x, cy + 2, w,
+                v -> ModuleManager.hsb(hue, ModuleManager.GUI_SAT.get(), v / 10), false, false);
 
         context.drawTextWithShadow(textRenderer, "Rebind GUI", x + 8, cy + 8, DIM);
         String key = "Right Shift";
-        int kw = textRenderer.getWidth(key) + 8;
-        context.fill(x + w - 8 - kw, cy + 5, x + w - 8, cy + 18, 0xFF222222);
-        context.drawTextWithShadow(textRenderer, key, x + w - 4 - kw, cy + 8, 0xFF666666);
+        int kw = textRenderer.getWidth(key) + 10;
+        rrect(context, x + w - 8 - kw, cy + 5, kw, 14, 0xFF232323, true, true);
+        context.drawTextWithShadow(textRenderer, key, x + w - 3 - kw, cy + 8, 0xFF6A6A6A);
     }
 
     // ---- Category panels ----
@@ -216,8 +286,9 @@ public class ModMenuScreen extends Screen {
         for (Module m : modules) {
             boolean open = expanded.contains(m.getId());
             boolean hover = mx >= x && mx < x + w && my >= cy && my < cy + ROW_H;
+            boolean lastRow = !open && m == modules.get(modules.size() - 1);
             if (m.isEnabled()) {
-                context.fill(x, cy, x + w, cy + ROW_H, accent());
+                rrect(context, x, cy, w, ROW_H, accent(), false, lastRow);
             } else if (hover) {
                 context.fill(x, cy, x + w, cy + ROW_H, ROW_HOVER);
             }
@@ -314,16 +385,19 @@ public class ModMenuScreen extends Screen {
             };
             addHit(x, y, x + w, y + h, (cx, btn) -> setter.accept(cx), setter);
         } else if (s instanceof StringSetting str) {
-            if (str == ModuleManager.HL_BLOCKS) {
+            if (str == ModuleManager.HL_BLOCKS || str == ModuleManager.SE_BLOCKS) {
                 // block list: a button that opens the search screen with block pictures
                 int n = BlockPickerScreen.count(str.get());
                 context.fill(ix, y + 2, ix + iw, y + h - 2, 0xFF262626);
-                String label = trim("Choose blocks (" + n + ")", iw - 6);
+                String label = trim("Choose " + (str == ModuleManager.SE_BLOCKS ? "storage" : "blocks") + " (" + n + ")", iw - 6);
                 context.drawTextWithShadow(textRenderer, label,
                         ix + (iw - textRenderer.getWidth(label)) / 2, y + 7, accent());
                 addHit(x, y, x + w, y + h, (cx, btn) -> {
                     if (client != null) {
-                        client.setScreen(new BlockPickerScreen(this));
+                        client.setScreen(str == ModuleManager.SE_BLOCKS
+                                ? new BlockPickerScreen(this, str, com.example.clientmod.feature.StorageEsp::isStorage,
+                                        "Choose storage blocks to show")
+                                : new BlockPickerScreen(this));
                     }
                 }, null);
             } else {
@@ -357,7 +431,7 @@ public class ModMenuScreen extends Screen {
 
     private void drawProfilesPanel(DrawContext context, int x, int y, int w, int mx, int my) {
         int rows = 1 + (creating ? 1 : 0) + profiles.size();
-        panel(context, x, y, w, HEADER_H + rows * ROW_H);
+        panel(context, x, y, w, HEADER_H + rows * ROW_H + 4);
         int cy = drawHeader(context, "Profiles", x, y, w);
 
         // CREATE button: accent plus-circle and text
@@ -393,15 +467,15 @@ public class ModMenuScreen extends Screen {
             boolean isActive = name.equals(active);
             boolean hover = mx >= x && mx < x + w && my >= cy && my < cy + ROW_H;
             if (isActive) {
-                context.fill(x, cy, x + w, cy + ROW_H, accent());
+                rrect(context, x + 4, cy + 2, w - 8, ROW_H - 4, accent(), true, true);
             } else if (hover) {
-                context.fill(x, cy, x + w, cy + ROW_H, ROW_HOVER);
+                rrect(context, x + 4, cy + 2, w - 8, ROW_H - 4, ROW_HOVER, true, true);
             }
             boolean deletable = !ProfileManager.DEFAULT.equals(name);
             int textMax = w - 12 - (deletable ? 14 : 0);
-            context.drawTextWithShadow(textRenderer, trim(name, textMax), x + 8, cy + 7, isActive ? TEXT : DIM);
+            context.drawTextWithShadow(textRenderer, trim(name, textMax), x + 11, cy + 7, isActive ? TEXT : DIM);
             if (deletable) {
-                context.drawTextWithShadow(textRenderer, "x", x + w - 12, cy + 7, isActive ? TEXT : DIM);
+                context.drawTextWithShadow(textRenderer, "x", x + w - 14, cy + 7, isActive ? TEXT : DIM);
                 addHit(x + w - 16, cy, x + w, cy + ROW_H, (cx, b) -> {
                     ProfileManager.delete(name);
                     profiles = ProfileManager.list();

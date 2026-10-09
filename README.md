@@ -15,7 +15,7 @@ Fabric is the usual choice for client mods: it's lightweight, updates fast, and 
    - IntelliJ: use the generated `Minecraft Client` run config, or
    - Terminal: `./gradlew runClient` (Windows: `gradlew.bat runClient`)
 3. In-game, press **G** to see the sample keybind message. Check the log for "mixin hook works".
-4. Build a jar to install in a normal launcher: `./gradlew build` -> `build/libs/my-client-mod-1.3.0.jar`
+4. Build a jar to install in a normal launcher: `./gradlew build` -> `build/libs/my-client-mod-1.4.0.jar`
    (drop it in a Fabric profile's `mods/` folder along with Fabric API).
 
 ## In-game module menu
@@ -26,7 +26,7 @@ Modules with options have a **Settings** button next to them (sliders, toggles, 
 
 ### Block Highlight
 Turn it on, open its Settings, and type block names separated by commas, e.g. `diamond_ore,chest,spawner`
-(the `minecraft:` prefix is optional; modded blocks need the full `modid:block`). Pick a color, range and max count.
+(the `minecraft:` prefix is optional; modded blocks need the full `modid:block`). Pick a color, range (up to 256 blocks) and max count.
 It rescans about once a second. "See through walls" draws the outlines over everything.
 Many multiplayer servers treat see-through-walls block highlighting as cheating (x-ray) and ban for it. Check server rules.
 

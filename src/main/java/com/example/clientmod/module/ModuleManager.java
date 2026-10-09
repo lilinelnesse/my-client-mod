@@ -63,9 +63,9 @@ public final class ModuleManager {
     public static final ChoiceSetting HL_COLOR =
             HIGHLIGHT.add(new ChoiceSetting("color", "Color", COLOR_NAMES, 0));
     public static final IntSetting HL_RANGE =
-            HIGHLIGHT.add(new IntSetting("range", "Range", 8, 32, 16));
+            HIGHLIGHT.add(new IntSetting("range", "Range", 8, 256, 32));
     public static final IntSetting HL_MAX =
-            HIGHLIGHT.add(new IntSetting("max", "Max blocks", 50, 1000, 300));
+            HIGHLIGHT.add(new IntSetting("max", "Max blocks", 50, 2000, 300));
     public static final BoolSetting HL_THROUGH_WALLS =
             HIGHLIGHT.add(new BoolSetting("walls", "See through walls", true));
 

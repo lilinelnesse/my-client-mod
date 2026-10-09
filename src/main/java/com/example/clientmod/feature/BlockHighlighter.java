@@ -17,6 +17,8 @@ import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.WorldChunk;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -64,18 +66,47 @@ public final class BlockHighlighter {
         BlockPos center = client.player.getBlockPos();
         int minY = Math.max(center.getY() - range, world.getBottomY());
         int maxY = Math.min(center.getY() + range, world.getBottomY() + world.getHeight() - 1);
+        long rangeSq = (long) range * range;
 
+        // Walk loaded chunks section by section and skip sections that contain none of the
+        // target blocks, so even a 256 block range stays cheap.
         List<BlockPos> result = new ArrayList<>();
-        BlockPos.Mutable pos = new BlockPos.Mutable();
+        int minCx = (center.getX() - range) >> 4, maxCx = (center.getX() + range) >> 4;
+        int minCz = (center.getZ() - range) >> 4, maxCz = (center.getZ() + range) >> 4;
+        int bottomSection = world.getBottomSectionCoord();
         scan:
-        for (int x = center.getX() - range; x <= center.getX() + range; x++) {
-            for (int z = center.getZ() - range; z <= center.getZ() + range; z++) {
-                for (int y = minY; y <= maxY; y++) {
-                    pos.set(x, y, z);
-                    if (targets.contains(world.getBlockState(pos).getBlock())) {
-                        result.add(pos.toImmutable());
-                        if (result.size() >= HARD_CAP) {
-                            break scan;
+        for (int cx = minCx; cx <= maxCx; cx++) {
+            for (int cz = minCz; cz <= maxCz; cz++) {
+                WorldChunk chunk = world.getChunkManager().getWorldChunk(cx, cz);
+                if (chunk == null) {
+                    continue;
+                }
+                ChunkSection[] sections = chunk.getSectionArray();
+                for (int si = 0; si < sections.length; si++) {
+                    ChunkSection section = sections[si];
+                    int baseY = (bottomSection + si) << 4;
+                    if (section == null || section.isEmpty() || baseY + 15 < minY || baseY > maxY
+                            || !section.hasAny(state -> targets.contains(state.getBlock()))) {
+                        continue;
+                    }
+                    for (int lx = 0; lx < 16; lx++) {
+                        for (int lz = 0; lz < 16; lz++) {
+                            for (int ly = 0; ly < 16; ly++) {
+                                if (!targets.contains(section.getBlockState(lx, ly, lz).getBlock())) {
+                                    continue;
+                                }
+                                int wx = (cx << 4) + lx;
+                                int wy = baseY + ly;
+                                int wz = (cz << 4) + lz;
+                                long dx = wx - center.getX(), dy = wy - center.getY(), dz = wz - center.getZ();
+                                if (dx * dx + dy * dy + dz * dz > rangeSq) {
+                                    continue;
+                                }
+                                result.add(new BlockPos(wx, wy, wz));
+                                if (result.size() >= HARD_CAP) {
+                                    break scan;
+                                }
+                            }
                         }
                     }
                 }

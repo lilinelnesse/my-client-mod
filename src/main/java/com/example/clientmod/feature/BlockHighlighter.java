@@ -1,21 +1,23 @@
 package com.example.clientmod.feature;
 
 import com.example.clientmod.module.ModuleManager;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayers;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.VertexRendering;
+import net.minecraft.client.gl.ShaderProgramKeys;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
+import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,10 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Outlines the blocks listed in the module's settings that are near the player.
- * Uses Minecraft's own line renderer, so outlines are hidden behind solid blocks like normal.
- */
+/** Outlines the blocks listed in the module's settings that are near the player. */
 public final class BlockHighlighter {
     private static final int SCAN_INTERVAL_TICKS = 20;
     private static final int HARD_CAP = 20000;
@@ -107,27 +106,75 @@ public final class BlockHighlighter {
         return blocks;
     }
 
-    /** Draws the outlines. Registered on the world render event (after entities). */
+    /** Draws the outlines. Registered on the world render event. */
     public static void render(WorldRenderContext context) {
         List<BlockPos> toDraw = found;
         if (!ModuleManager.HIGHLIGHT.isEnabled() || toDraw.isEmpty()) {
             return;
         }
-        MatrixStack matrices = context.matrices();
-        VertexConsumerProvider consumers = context.consumers();
-        if (matrices == null || consumers == null) {
+        MatrixStack matrices = context.matrixStack();
+        if (matrices == null) {
             return;
         }
 
-        // Coordinates sent to the renderer must be relative to the camera.
-        Vec3d cam = context.worldState().cameraRenderState.pos;
-        int argb = 0xFF000000 | ModuleManager.COLOR_RGB[ModuleManager.HL_COLOR.get()];
+        int rgb = ModuleManager.COLOR_RGB[ModuleManager.HL_COLOR.get()];
+        float r = ((rgb >> 16) & 0xFF) / 255f;
+        float g = ((rgb >> 8) & 0xFF) / 255f;
+        float b = (rgb & 0xFF) / 255f;
 
-        VertexConsumer lines = consumers.getBuffer(RenderLayers.lines());
-        VoxelShape cube = VoxelShapes.fullCube();
-        for (BlockPos p : toDraw) {
-            VertexRendering.drawOutline(matrices, lines, cube,
-                    p.getX() - cam.x, p.getY() - cam.y, p.getZ() - cam.z, argb, 2.0f);
+        Vec3d cam = context.camera().getPos();
+        matrices.push();
+        matrices.translate(-cam.x, -cam.y, -cam.z);
+        Matrix4f matrix = matrices.peek().getPositionMatrix();
+
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        if (ModuleManager.HL_THROUGH_WALLS.get()) {
+            RenderSystem.disableDepthTest();
+        } else {
+            RenderSystem.enableDepthTest();
         }
+        RenderSystem.lineWidth(2.0f);
+
+        BufferBuilder buffer = Tessellator.getInstance()
+                .begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+        for (BlockPos p : toDraw) {
+            addBox(buffer, matrix, p.getX(), p.getY(), p.getZ(), r, g, b);
+        }
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+
+        RenderSystem.enableDepthTest();
+        RenderSystem.disableBlend();
+        RenderSystem.lineWidth(1.0f);
+        matrices.pop();
+    }
+
+    private static void addBox(BufferBuilder buf, Matrix4f m, float x, float y, float z,
+                               float r, float g, float b) {
+        float x2 = x + 1;
+        float y2 = y + 1;
+        float z2 = z + 1;
+        // bottom square
+        line(buf, m, x, y, z, x2, y, z, r, g, b);
+        line(buf, m, x2, y, z, x2, y, z2, r, g, b);
+        line(buf, m, x2, y, z2, x, y, z2, r, g, b);
+        line(buf, m, x, y, z2, x, y, z, r, g, b);
+        // top square
+        line(buf, m, x, y2, z, x2, y2, z, r, g, b);
+        line(buf, m, x2, y2, z, x2, y2, z2, r, g, b);
+        line(buf, m, x2, y2, z2, x, y2, z2, r, g, b);
+        line(buf, m, x, y2, z2, x, y2, z, r, g, b);
+        // vertical edges
+        line(buf, m, x, y, z, x, y2, z, r, g, b);
+        line(buf, m, x2, y, z, x2, y2, z, r, g, b);
+        line(buf, m, x2, y, z2, x2, y2, z2, r, g, b);
+        line(buf, m, x, y, z2, x, y2, z2, r, g, b);
+    }
+
+    private static void line(BufferBuilder buf, Matrix4f m, float x1, float y1, float z1,
+                             float x2, float y2, float z2, float r, float g, float b) {
+        buf.vertex(m, x1, y1, z1).color(r, g, b, 1.0f);
+        buf.vertex(m, x2, y2, z2).color(r, g, b, 1.0f);
     }
 }

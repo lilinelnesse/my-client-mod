@@ -10,13 +10,19 @@ public class Module {
     private final String id;
     private final String name;
     private final String description;
+    private final String category;
     private final List<Setting> settings = new ArrayList<>();
     private boolean enabled;
 
     public Module(String id, String name, String description, boolean enabledByDefault) {
+        this(id, name, description, "Utility", enabledByDefault);
+    }
+
+    public Module(String id, String name, String description, String category, boolean enabledByDefault) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.category = category;
         this.enabled = enabledByDefault;
     }
 
@@ -29,6 +35,7 @@ public class Module {
     public String getId() { return id; }
     public String getName() { return name; }
     public String getDescription() { return description; }
+    public String getCategory() { return category; }
     public List<Setting> getSettings() { return settings; }
     public boolean hasSettings() { return !settings.isEmpty(); }
     public boolean isEnabled() { return enabled; }

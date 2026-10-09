@@ -21,13 +21,19 @@ public final class ModuleManager {
     public static final List<String> CORNERS = List.of("Top Left", "Top Right", "Bottom Right");
     public static final List<String> SIDES = List.of("Left", "Right");
     public static final List<String> COLOR_NAMES =
-            List.of("Cyan", "Red", "Green", "Yellow", "Magenta", "Orange", "White", "Blue");
+            List.of("Cyan", "Red", "Green", "Yellow", "Magenta", "Orange", "White", "Blue", "Pink");
     public static final int[] COLOR_RGB =
-            {0x00FFFF, 0xFF3030, 0x30FF30, 0xFFFF30, 0xFF30FF, 0xFFA020, 0xFFFFFF, 0x3060FF};
+            {0x00FFFF, 0xFF3030, 0x30FF30, 0xFFFF30, 0xFF30FF, 0xFFA020, 0xFFFFFF, 0x3060FF, 0xFF2D78};
+
+    /** Order of the columns in the menu. Every module's category must be one of these. */
+    public static final List<String> CATEGORIES = List.of("HUD", "Render", "Utility");
+
+    /** Accent color of the menu (index into COLOR_RGB). Saved in the main config, not in profiles. */
+    public static final IntSetting GUI_ACCENT = new IntSetting("accent", "Accent", 0, COLOR_RGB.length - 1, 8);
 
     // --- Coordinates HUD ---
-    public static final Module COORDS = new Module("coords", "Coordinates HUD",
-            "Shows your X / Y / Z position.", true);
+    public static final Module COORDS = new Module("coords", "Coordinates",
+            "Shows your X / Y / Z position.", "HUD", true);
     public static final ChoiceSetting COORDS_CORNER =
             COORDS.add(new ChoiceSetting("corner", "Corner", CORNERS, 0));
     public static final IntSetting COORDS_DECIMALS =
@@ -35,15 +41,15 @@ public final class ModuleManager {
 
     // --- FPS counter ---
     public static final Module FPS = new Module("fps", "FPS Counter",
-            "Shows your frames per second.", true);
+            "Shows your frames per second.", "HUD", true);
     public static final ChoiceSetting FPS_CORNER =
             FPS.add(new ChoiceSetting("corner", "Corner", CORNERS, 0));
 
     // --- Armor & item HUD ---
-    public static final Module ARMOR_HUD = new Module("armorhud", "Armor & Item HUD",
-            "Shows your armor and held items with durability.", true);
+    public static final Module ARMOR_HUD = new Module("armorhud", "Armor & Items",
+            "Shows your armor and held items with durability.", "HUD", true);
     public static final ChoiceSetting ARMOR_SIDE =
-            ARMOR_HUD.add(new ChoiceSetting("side", "Side of screen", SIDES, 0));
+            ARMOR_HUD.add(new ChoiceSetting("side", "Side", SIDES, 0));
     public static final BoolSetting ARMOR_NUMBERS =
             ARMOR_HUD.add(new BoolSetting("numbers", "Durability numbers", true));
     public static final BoolSetting ARMOR_HANDS =
@@ -51,7 +57,7 @@ public final class ModuleManager {
 
     // --- Block highlighter ---
     public static final Module HIGHLIGHT = new Module("highlight", "Block Highlight",
-            "Outlines the blocks you choose that are near you and visible.", false);
+            "Outlines the blocks you choose near you.", "Render", false);
     public static final StringSetting HL_BLOCKS = HIGHLIGHT.add(new StringSetting("blocks", "Blocks (comma separated)",
             "diamond_ore,deepslate_diamond_ore,ancient_debris"));
     public static final ChoiceSetting HL_COLOR =
@@ -60,36 +66,44 @@ public final class ModuleManager {
             HIGHLIGHT.add(new IntSetting("range", "Range", 8, 32, 16));
     public static final IntSetting HL_MAX =
             HIGHLIGHT.add(new IntSetting("max", "Max blocks", 50, 1000, 300));
+    public static final BoolSetting HL_THROUGH_WALLS =
+            HIGHLIGHT.add(new BoolSetting("walls", "See through walls", true));
 
     // --- Fullbright ---
     public static final Module FULLBRIGHT = new Module("fullbright", "Fullbright",
-            "Makes everything fully bright, even in caves and at night.", false);
+            "Makes everything fully bright, even in caves and at night.", "Render", false);
 
     // --- Auto sprint ---
     public static final Module AUTO_SPRINT = new Module("autosprint", "Auto Sprint",
-            "Sprints automatically while you hold forward.", false);
+            "Sprints automatically while you hold forward.", "Utility", false);
 
     public static final List<Module> ALL = List.of(
             COORDS, FPS, ARMOR_HUD, HIGHLIGHT, FULLBRIGHT, AUTO_SPRINT);
 
     private ModuleManager() {}
 
+    public static List<Module> inCategory(String category) {
+        return ALL.stream().filter(m -> m.getCategory().equals(category)).toList();
+    }
+
     private static Path configFile() {
         return FabricLoader.getInstance().getConfigDir().resolve("myclientmod.properties");
     }
 
-    public static void load() {
-        Path file = configFile();
-        if (!Files.exists(file)) {
-            return;
-        }
+    /** Current on/off state and settings of every module, as text key/values (used by profiles too). */
+    public static Properties snapshot() {
         Properties props = new Properties();
-        try (InputStream in = Files.newInputStream(file)) {
-            props.load(in);
-        } catch (IOException e) {
-            MyClientMod.LOGGER.warn("Could not read config", e);
-            return;
+        for (Module module : ALL) {
+            props.setProperty(module.getId(), Boolean.toString(module.isEnabled()));
+            for (Setting setting : module.getSettings()) {
+                props.setProperty(module.getId() + "." + setting.getId(), setting.serialize());
+            }
         }
+        return props;
+    }
+
+    /** Applies a snapshot. Anything missing from it keeps its current value. */
+    public static void apply(Properties props) {
         for (Module module : ALL) {
             String enabled = props.getProperty(module.getId());
             if (enabled != null) {
@@ -104,18 +118,36 @@ public final class ModuleManager {
         }
     }
 
-    public static void save() {
-        Properties props = new Properties();
-        for (Module module : ALL) {
-            props.setProperty(module.getId(), Boolean.toString(module.isEnabled()));
-            for (Setting setting : module.getSettings()) {
-                props.setProperty(module.getId() + "." + setting.getId(), setting.serialize());
-            }
+    public static void load() {
+        Path file = configFile();
+        if (!Files.exists(file)) {
+            return;
         }
+        Properties props = new Properties();
+        try (InputStream in = Files.newInputStream(file)) {
+            props.load(in);
+        } catch (IOException e) {
+            MyClientMod.LOGGER.warn("Could not read config", e);
+            return;
+        }
+        apply(props);
+        String accent = props.getProperty("gui.accent");
+        if (accent != null) {
+            GUI_ACCENT.deserialize(accent);
+        }
+        ProfileManager.setActive(props.getProperty("profile.active", ProfileManager.DEFAULT));
+    }
+
+    /** Saves the main config and keeps the active profile in sync with it. */
+    public static void save() {
+        Properties props = snapshot();
+        props.setProperty("profile.active", ProfileManager.getActive());
+        props.setProperty("gui.accent", GUI_ACCENT.serialize());
         try (OutputStream out = Files.newOutputStream(configFile())) {
             props.store(out, "My Client Mod settings");
         } catch (IOException e) {
             MyClientMod.LOGGER.warn("Could not save config", e);
         }
+        ProfileManager.writeActive();
     }
 }

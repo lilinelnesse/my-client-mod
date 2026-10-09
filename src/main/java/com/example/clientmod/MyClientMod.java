@@ -8,15 +8,13 @@ import com.example.clientmod.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,19 +28,16 @@ public class MyClientMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("My Client Mod 1.2.0 (Minecraft 1.21.11 build) loaded");
+        LOGGER.info("My Client Mod 1.3.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
 
         ModuleManager.load();
-
-        // Since 1.21.9 key bindings need a category object (label key: key.category.myclientmod.main)
-        KeyBinding.Category category = KeyBinding.Category.create(Identifier.of(MOD_ID, "main"));
 
         // Press G in-game to show a chat message (rebindable in Controls)
         greetKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.myclientmod.greet",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_G,
-                category
+                "category.myclientmod"
         ));
 
         // Press Right Shift to open the module menu (rebindable in Controls)
@@ -50,7 +45,7 @@ public class MyClientMod implements ClientModInitializer {
                 "key.myclientmod.menu",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT_SHIFT,
-                category
+                "category.myclientmod"
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -70,14 +65,8 @@ public class MyClientMod implements ClientModInitializer {
             BlockHighlighter.tick(client);
         });
 
-        // HUD: HudRenderCallback was replaced by the HudElementRegistry
-        HudElementRegistry.attachElementAfter(
-                VanillaHudElements.MISC_OVERLAYS,
-                Identifier.of(MOD_ID, "hud"),
-                (context, tickCounter) -> Hud.render(context));
-
-        // World drawing: the block outlines are drawn right after entities
-        WorldRenderEvents.AFTER_ENTITIES.register(BlockHighlighter::render);
+        HudRenderCallback.EVENT.register((context, tickCounter) -> Hud.render(context));
+        WorldRenderEvents.LAST.register(BlockHighlighter::render);
     }
 
     private static void tickAutoSprint(MinecraftClient client) {

@@ -1,5 +1,5 @@
 {
   "key.myclientmod.greet": "Send Greeting",
   "key.myclientmod.menu": "Open Module Menu",
-  "key.category.myclientmod.main": "My Client Mod"
+  "category.myclientmod": "My Client Mod"
 }

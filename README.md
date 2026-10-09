@@ -1,4 +1,4 @@
-# My Client Mod (Fabric, Minecraft 1.21.11)
+# My Client Mod (Fabric, Minecraft 1.21.4)
 
 A starter environment for building a custom Minecraft client with your own mods.
 Fabric is the usual choice for client mods: it's lightweight, updates fast, and has great Mixin support.
@@ -9,13 +9,13 @@ Fabric is the usual choice for client mods: it's lightweight, updates fast, and 
 - An IDE: IntelliJ IDEA (Community is fine) recommended
 
 ## Quick start
-0. (Only if you don't use IntelliJ) Generate the Gradle wrapper once: install Gradle 9.5+ and run `gradle wrapper --gradle-version 9.8.0`.
+0. (Only if you don't use IntelliJ) Generate the Gradle wrapper once: install Gradle 8.12+ and run `gradle wrapper --gradle-version 8.12`.
 1. Open this folder in IntelliJ IDEA ("Open" -> select `build.gradle`), let Gradle sync.
 2. Run the dev client:
    - IntelliJ: use the generated `Minecraft Client` run config, or
    - Terminal: `./gradlew runClient` (Windows: `gradlew.bat runClient`)
 3. In-game, press **G** to see the sample keybind message. Check the log for "mixin hook works".
-4. Build a jar to install in a normal launcher: `./gradlew build` -> `build/libs/my-client-mod-mc1.21.11-1.2.0.jar`
+4. Build a jar to install in a normal launcher: `./gradlew build` -> `build/libs/my-client-mod-1.3.0.jar`
    (drop it in a Fabric profile's `mods/` folder along with Fabric API).
 
 ## In-game module menu
@@ -27,8 +27,8 @@ Modules with options have a **Settings** button next to them (sliders, toggles, 
 ### Block Highlight
 Turn it on, open its Settings, and type block names separated by commas, e.g. `diamond_ore,chest,spawner`
 (the `minecraft:` prefix is optional; modded blocks need the full `modid:block`). Pick a color, range and max count.
-It rescans about once a second. Outlines use the game's own line drawing, so they are hidden behind solid blocks (no see-through-walls in the 1.21.11 build).
-Many multiplayer servers ban block-finding mods. Check server rules.
+It rescans about once a second. "See through walls" draws the outlines over everything.
+Many multiplayer servers treat see-through-walls block highlighting as cheating (x-ray) and ban for it. Check server rules.
 
 To add your own module: add a `new Module(...)` to `ModuleManager.java` (and to its `ALL` list),
 then check `YourModule.isEnabled()` wherever it should do something (a tick event, the HUD, or a mixin).

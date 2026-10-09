@@ -29,7 +29,41 @@ public final class ModuleManager {
     public static final List<String> CATEGORIES = List.of("HUD", "Render", "Utility");
 
     /** Accent color of the menu (index into COLOR_RGB). Saved in the main config, not in profiles. */
-    public static final IntSetting GUI_ACCENT = new IntSetting("accent", "Accent", 0, COLOR_RGB.length - 1, 8);
+    public static final int DEFAULT_HUE = 340, DEFAULT_SAT = 82, DEFAULT_VIB = 100;
+    public static final IntSetting GUI_HUE = new IntSetting("hue", "Hue", 0, 360, DEFAULT_HUE);
+    public static final IntSetting GUI_SAT = new IntSetting("sat", "Saturation", 0, 100, DEFAULT_SAT);
+    public static final IntSetting GUI_VIB = new IntSetting("vib", "Vibrance", 0, 100, DEFAULT_VIB);
+
+    /** HSB (hue 0-360, saturation and brightness 0-100) to 0xRRGGBB. */
+    public static int hsb(int hue, int sat, int bri) {
+        float h = (hue % 360) / 60f;
+        float sv = sat / 100f;
+        float v = bri / 100f;
+        int i = (int) Math.floor(h);
+        float f = h - i;
+        float p = v * (1 - sv), q = v * (1 - sv * f), t = v * (1 - sv * (1 - f));
+        float r, g, b;
+        switch (i % 6) {
+            case 0 -> { r = v; g = t; b = p; }
+            case 1 -> { r = q; g = v; b = p; }
+            case 2 -> { r = p; g = v; b = t; }
+            case 3 -> { r = p; g = q; b = v; }
+            case 4 -> { r = t; g = p; b = v; }
+            default -> { r = v; g = p; b = q; }
+        }
+        return (Math.round(r * 255) << 16) | (Math.round(g * 255) << 8) | Math.round(b * 255);
+    }
+
+    /** The menu's accent color as 0xFFRRGGBB. */
+    public static int accentArgb() {
+        return 0xFF000000 | hsb(GUI_HUE.get(), GUI_SAT.get(), GUI_VIB.get());
+    }
+
+    public static void resetAccent() {
+        GUI_HUE.set(DEFAULT_HUE);
+        GUI_SAT.set(DEFAULT_SAT);
+        GUI_VIB.set(DEFAULT_VIB);
+    }
 
     // --- Coordinates HUD ---
     public static final Module COORDS = new Module("coords", "Coordinates",
@@ -69,6 +103,20 @@ public final class ModuleManager {
     public static final BoolSetting HL_THROUGH_WALLS =
             HIGHLIGHT.add(new BoolSetting("walls", "See through walls", true));
 
+    // --- Netherite (ancient debris) chunk finder ---
+    public static final Module NETHERITE = new Module("netherite", "Netherite Finder",
+            "Marks loaded chunks that contain ancient debris.", "Render", false);
+    public static final IntSetting NF_RANGE =
+            NETHERITE.add(new IntSetting("range", "Range (chunks)", 2, 32, 12));
+    public static final IntSetting NF_MIN =
+            NETHERITE.add(new IntSetting("min", "Min debris per chunk", 1, 8, 1));
+    public static final ChoiceSetting NF_COLOR =
+            NETHERITE.add(new ChoiceSetting("color", "Color", COLOR_NAMES, 5));
+    public static final BoolSetting NF_INFO =
+            NETHERITE.add(new BoolSetting("info", "Show info text", true));
+    public static final ChoiceSetting NF_CORNER =
+            NETHERITE.add(new ChoiceSetting("corner", "Info corner", CORNERS, 1));
+
     // --- Fullbright ---
     public static final Module FULLBRIGHT = new Module("fullbright", "Fullbright",
             "Makes everything fully bright, even in caves and at night.", "Render", false);
@@ -78,7 +126,7 @@ public final class ModuleManager {
             "Sprints automatically while you hold forward.", "Utility", false);
 
     public static final List<Module> ALL = List.of(
-            COORDS, FPS, ARMOR_HUD, HIGHLIGHT, FULLBRIGHT, AUTO_SPRINT);
+            COORDS, FPS, ARMOR_HUD, HIGHLIGHT, NETHERITE, FULLBRIGHT, AUTO_SPRINT);
 
     private ModuleManager() {}
 
@@ -131,10 +179,12 @@ public final class ModuleManager {
             return;
         }
         apply(props);
-        String accent = props.getProperty("gui.accent");
-        if (accent != null) {
-            GUI_ACCENT.deserialize(accent);
-        }
+        String hue = props.getProperty("gui.hue");
+        if (hue != null) GUI_HUE.deserialize(hue);
+        String sat = props.getProperty("gui.sat");
+        if (sat != null) GUI_SAT.deserialize(sat);
+        String vib = props.getProperty("gui.vib");
+        if (vib != null) GUI_VIB.deserialize(vib);
         ProfileManager.setActive(props.getProperty("profile.active", ProfileManager.DEFAULT));
     }
 
@@ -142,7 +192,9 @@ public final class ModuleManager {
     public static void save() {
         Properties props = snapshot();
         props.setProperty("profile.active", ProfileManager.getActive());
-        props.setProperty("gui.accent", GUI_ACCENT.serialize());
+        props.setProperty("gui.hue", GUI_HUE.serialize());
+        props.setProperty("gui.sat", GUI_SAT.serialize());
+        props.setProperty("gui.vib", GUI_VIB.serialize());
         try (OutputStream out = Files.newOutputStream(configFile())) {
             props.store(out, "My Client Mod settings");
         } catch (IOException e) {

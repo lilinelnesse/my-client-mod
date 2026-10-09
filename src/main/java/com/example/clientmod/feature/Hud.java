@@ -40,6 +40,15 @@ public final class Hud {
             drawInfo(context, client, coords, ModuleManager.COORDS_CORNER.get(), used);
         }
 
+        if (ModuleManager.NETHERITE.isEnabled() && ModuleManager.NF_INFO.get()) {
+            NetheriteFinder.Mark m = NetheriteFinder.getNearest();
+            String text = m == null
+                    ? "Netherite: none in range"
+                    : "Netherite: chunk " + m.chunkX() + ", " + m.chunkZ() + " (" + m.count() + " debris, "
+                            + NetheriteFinder.distanceTo(client, m) + " blocks)";
+            drawInfo(context, client, text, ModuleManager.NF_CORNER.get(), used);
+        }
+
         if (ModuleManager.ARMOR_HUD.isEnabled()) {
             drawArmor(context, client);
         }

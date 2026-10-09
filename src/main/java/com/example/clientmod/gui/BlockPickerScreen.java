@@ -122,7 +122,7 @@ public class BlockPickerScreen extends Screen {
     }
 
     private int accent() {
-        return 0xFF000000 | ModuleManager.COLOR_RGB[ModuleManager.GUI_ACCENT.get()];
+        return ModuleManager.accentArgb();
     }
 
     @Override

@@ -278,17 +278,30 @@ public class ModMenuScreen extends Screen {
             };
             addHit(x, y, x + w, y + h, (cx, btn) -> setter.accept(cx), setter);
         } else if (s instanceof StringSetting str) {
-            context.drawTextWithShadow(textRenderer, trim(s.getLabel(), iw), ix, y + 1, DIM);
-            boolean active = editing == str;
-            int by = y + 11;
-            context.fill(ix, by, ix + iw, by + 10, active ? 0xFF2A2A2A : 0xFF1E1E1E);
-            String shown = str.get() + (active && (System.currentTimeMillis() / 500) % 2 == 0 ? "_" : "");
-            // show the end of long text so you see what you're typing
-            while (shown.length() > 1 && textRenderer.getWidth(shown) > iw - 4) {
-                shown = shown.substring(1);
+            if (str == ModuleManager.HL_BLOCKS) {
+                // block list: a button that opens the search screen with block pictures
+                int n = BlockPickerScreen.count(str.get());
+                context.fill(ix, y + 2, ix + iw, y + h - 2, 0xFF262626);
+                String label = trim("Choose blocks (" + n + ")", iw - 6);
+                context.drawTextWithShadow(textRenderer, label,
+                        ix + (iw - textRenderer.getWidth(label)) / 2, y + 7, accent());
+                addHit(x, y, x + w, y + h, (cx, btn) -> {
+                    if (client != null) {
+                        client.setScreen(new BlockPickerScreen(this));
+                    }
+                }, null);
+            } else {
+                context.drawTextWithShadow(textRenderer, trim(s.getLabel(), iw), ix, y + 1, DIM);
+                boolean active = editing == str;
+                int by = y + 11;
+                context.fill(ix, by, ix + iw, by + 10, active ? 0xFF2A2A2A : 0xFF1E1E1E);
+                String shown = str.get() + (active && (System.currentTimeMillis() / 500) % 2 == 0 ? "_" : "");
+                while (shown.length() > 1 && textRenderer.getWidth(shown) > iw - 4) {
+                    shown = shown.substring(1);
+                }
+                context.drawTextWithShadow(textRenderer, shown, ix + 2, by + 1, TEXT);
+                addHit(x, y, x + w, y + h, (cx, btn) -> editing = str, null);
             }
-            context.drawTextWithShadow(textRenderer, shown, ix + 2, by + 1, TEXT);
-            addHit(x, y, x + w, y + h, (cx, btn) -> editing = str, null);
         }
         return y + h;
     }

@@ -1,5 +1,6 @@
 {
   "key.myclientmod.greet": "Send Greeting",
   "key.myclientmod.menu": "Open Module Menu",
+  "key.myclientmod.freecam": "Toggle Freecam",
   "category.myclientmod": "My Client Mod"
 }

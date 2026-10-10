@@ -80,17 +80,28 @@ public class ModMenuScreen extends Screen {
         dirty = true;
     }
 
+    /** The whole menu is drawn at this size (0.8 = 20% smaller than before). */
+    private static final float SCALE = 0.8f;
+
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int rawMouseX, int rawMouseY, float delta) {
         hits.clear();
         tooltip = null;
         context.fill(0, 0, width, height, 0x60000000);
 
+        int vw = Math.round(width / SCALE);
+        int vh = Math.round(height / SCALE);
+        int mouseX = Math.round(rawMouseX / SCALE);
+        int mouseY = Math.round(rawMouseY / SCALE);
+
+        context.getMatrices().push();
+        context.getMatrices().scale(SCALE, SCALE, 1.0f);
+
         int n = ModuleManager.CATEGORIES.size() + 2;
-        int pw = Math.max(100, Math.min(128, (width - 16 - (n - 1) * 3) / n));
+        int pw = Math.max(100, Math.min(128, (vw - 16 - (n - 1) * 3) / n));
         int total = n * pw + (n - 1) * 3;
-        int x = (width - total) / 2;
-        int y = Math.max(8, (height - 250) / 4);
+        int x = (vw - total) / 2;
+        int y = Math.max(8, (vh - 250) / 4);
 
         drawSettingsPanel(context, x, y, pw, mouseX, mouseY);
         x += pw + 3;
@@ -102,11 +113,13 @@ public class ModMenuScreen extends Screen {
 
         if (tooltip != null) {
             int tw = textRenderer.getWidth(tooltip) + 8;
-            int tx = Math.min(tipX + 8, width - tw - 2);
+            int tx = Math.min(tipX + 8, vw - tw - 2);
             int ty = tipY + 10;
             context.fill(tx, ty, tx + tw, ty + 14, 0xF0000000);
             context.drawTextWithShadow(textRenderer, tooltip, tx + 4, ty + 3, TEXT);
         }
+
+        context.getMatrices().pop();
     }
 
     /** Rounded-corner rectangle (radius 6): top and/or bottom corners can be rounded. */
@@ -492,7 +505,9 @@ public class ModMenuScreen extends Screen {
     // ---- Input ----
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(double rawX, double rawY, int button) {
+        double mouseX = rawX / SCALE;
+        double mouseY = rawY / SCALE;
         // any click ends text editing; the clicked text box / button can start it again
         editing = null;
         creating = false;
@@ -515,7 +530,9 @@ public class ModMenuScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(double rawX, double rawY, int button, double deltaX, double deltaY) {
+        double mouseX = rawX / SCALE;
+        double mouseY = rawY / SCALE;
         if (dragging != null && dragging.drag() != null) {
             dragging.drag().accept(mouseX);
             return true;

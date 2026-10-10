@@ -49,12 +49,14 @@ public final class Hud {
             drawInfo(context, client, text, ModuleManager.NF_CORNER.get(), used);
         }
 
+        PvpHud.render(context, client, used);
+
         if (ModuleManager.ARMOR_HUD.isEnabled()) {
             drawArmor(context, client);
         }
     }
 
-    private static void drawInfo(DrawContext context, MinecraftClient client, String text, int corner, int[] used) {
+    static void drawInfo(DrawContext context, MinecraftClient client, String text, int corner, int[] used) {
         TextRenderer font = client.textRenderer;
         int textWidth = font.getWidth(text);
         int screenWidth = context.getScaledWindowWidth();

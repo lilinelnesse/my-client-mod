@@ -2,6 +2,7 @@ package com.example.clientmod;
 
 import com.example.clientmod.feature.AutoMine;
 import com.example.clientmod.feature.BlockHighlighter;
+import com.example.clientmod.feature.Freecam;
 import com.example.clientmod.feature.Fullbright;
 import com.example.clientmod.feature.Hud;
 import com.example.clientmod.feature.NetheriteFinder;
@@ -28,10 +29,11 @@ public class MyClientMod implements ClientModInitializer {
 
     private static KeyBinding greetKey;
     private static KeyBinding menuKey;
+    private static KeyBinding freecamKey;
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("My Client Mod 1.11.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
+        LOGGER.info("My Client Mod 1.14.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
 
         ModuleManager.load();
 
@@ -51,7 +53,23 @@ public class MyClientMod implements ClientModInitializer {
                 "category.myclientmod"
         ));
 
+        // Press F6 to turn Freecam on or off (rebindable in Controls)
+        freecamKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.myclientmod.freecam",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_F6,
+                "category.myclientmod"
+        ));
+
+        // Freecam runs at the start of the tick, before the player reads the movement keys
+        ClientTickEvents.START_CLIENT_TICK.register(Freecam::tick);
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (freecamKey.wasPressed()) {
+                ModuleManager.FREECAM.toggle();
+                ModuleManager.save();
+            }
+
             while (greetKey.wasPressed()) {
                 if (client.player != null) {
                     client.player.sendMessage(Text.literal("Hello from My Client Mod!"), false);

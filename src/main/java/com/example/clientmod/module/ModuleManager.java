@@ -26,7 +26,7 @@ public final class ModuleManager {
             {0x00FFFF, 0xFF3030, 0x30FF30, 0xFFFF30, 0xFF30FF, 0xFFA020, 0xFFFFFF, 0x3060FF, 0xFF2D78};
 
     /** Order of the columns in the menu. Every module's category must be one of these. */
-    public static final List<String> CATEGORIES = List.of("HUD", "Render", "Utility");
+    public static final List<String> CATEGORIES = List.of("HUD", "PvP", "Render", "Utility");
 
     /** Accent color of the menu (index into COLOR_RGB). Saved in the main config, not in profiles. */
     public static final int DEFAULT_HUE = 345, DEFAULT_SAT = 91, DEFAULT_VIB = 100;
@@ -117,6 +117,27 @@ public final class ModuleManager {
     public static final ChoiceSetting NF_CORNER =
             NETHERITE.add(new ChoiceSetting("corner", "Info corner", CORNERS, 1));
 
+    // --- PvP (HUD helpers that PvP clients normally ship) ---
+    public static final Module CPS = new Module("cps", "CPS Counter",
+            "Shows how many times per second you click.", "PvP", false);
+    public static final ChoiceSetting CPS_CORNER =
+            CPS.add(new ChoiceSetting("corner", "Corner", CORNERS, 0));
+    public static final BoolSetting CPS_BOTH =
+            CPS.add(new BoolSetting("both", "Show right click too", true));
+
+    public static final Module KEYSTROKES = new Module("keystrokes", "Keystrokes",
+            "Shows which movement keys and mouse buttons you are pressing.", "PvP", false);
+
+    public static final Module POTION_HUD = new Module("potionhud", "Potion Effects",
+            "Lists your active potion effects with time left.", "PvP", false);
+    public static final ChoiceSetting POTION_CORNER =
+            POTION_HUD.add(new ChoiceSetting("corner", "Corner", CORNERS, 1));
+
+    public static final Module PING = new Module("ping", "Ping",
+            "Shows your latency to the server.", "PvP", false);
+    public static final ChoiceSetting PING_CORNER =
+            PING.add(new ChoiceSetting("corner", "Corner", CORNERS, 0));
+
     // --- Storage ESP ---
     public static final Module STORAGE_ESP = new Module("storageesp", "Storage ESP",
             "Outlines the chests, barrels and other storage you choose.", "Render", false);
@@ -125,9 +146,17 @@ public final class ModuleManager {
     public static final ChoiceSetting SE_COLOR =
             STORAGE_ESP.add(new ChoiceSetting("color", "Color", COLOR_NAMES, 3));
     public static final IntSetting SE_RANGE =
-            STORAGE_ESP.add(new IntSetting("range", "Range", 8, 128, 64));
+            STORAGE_ESP.add(new IntSetting("range", "Range", 8, 512, 128));
     public static final BoolSetting SE_THROUGH_WALLS =
             STORAGE_ESP.add(new BoolSetting("walls", "See through walls", true));
+
+    // --- Freecam ---
+    public static final Module FREECAM = new Module("freecam", "Freecam",
+            "Fly the camera around while your player stays put.", "Render", false);
+    public static final IntSetting FC_SPEED =
+            FREECAM.add(new IntSetting("speed", "Speed", 1, 50, 10));
+    public static final IntSetting FC_SPRINT =
+            FREECAM.add(new IntSetting("sprint", "Sprint multiplier (Ctrl)", 1, 6, 2));
 
     // --- Fullbright ---
     public static final Module FULLBRIGHT = new Module("fullbright", "Fullbright",
@@ -148,7 +177,7 @@ public final class ModuleManager {
             AUTO_MINE.add(new BoolSetting("look", "Look at blocks", true));
 
     public static final List<Module> ALL = List.of(
-            COORDS, FPS, ARMOR_HUD, HIGHLIGHT, NETHERITE, STORAGE_ESP, FULLBRIGHT, AUTO_SPRINT, AUTO_MINE);
+            COORDS, FPS, ARMOR_HUD, CPS, KEYSTROKES, POTION_HUD, PING, HIGHLIGHT, NETHERITE, STORAGE_ESP, FREECAM, FULLBRIGHT, AUTO_SPRINT, AUTO_MINE);
 
     private ModuleManager() {}
 

@@ -15,7 +15,7 @@ Fabric is the usual choice for client mods: it's lightweight, updates fast, and 
    - IntelliJ: use the generated `Minecraft Client` run config, or
    - Terminal: `./gradlew runClient` (Windows: `gradlew.bat runClient`)
 3. In-game, press **G** to see the sample keybind message. Check the log for "mixin hook works".
-4. Build a jar to install in a normal launcher: `./gradlew build` -> `build/libs/my-client-mod-1.11.0.jar`
+4. Build a jar to install in a normal launcher: `./gradlew build` -> `build/libs/my-client-mod-1.14.0.jar`
    (drop it in a Fabric profile's `mods/` folder along with Fabric API).
 
 ## In-game module menu

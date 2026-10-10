@@ -117,6 +117,32 @@ public final class ModuleManager {
     public static final ChoiceSetting NF_CORNER =
             NETHERITE.add(new ChoiceSetting("corner", "Info corner", CORNERS, 1));
 
+    // --- More HUD info ---
+    public static final Module DIRECTION = new Module("direction", "Direction",
+            "Shows which way you are facing.", "HUD", false);
+    public static final ChoiceSetting DIRECTION_CORNER =
+            DIRECTION.add(new ChoiceSetting("corner", "Corner", CORNERS, 0));
+    public static final Module SPEED = new Module("speed", "Speed",
+            "Shows how fast you are moving in blocks per second.", "HUD", false);
+    public static final ChoiceSetting SPEED_CORNER =
+            SPEED.add(new ChoiceSetting("corner", "Corner", CORNERS, 0));
+    public static final Module CLOCK = new Module("clock", "Clock",
+            "Shows the real time of day.", "HUD", false);
+    public static final ChoiceSetting CLOCK_CORNER =
+            CLOCK.add(new ChoiceSetting("corner", "Corner", CORNERS, 1));
+    public static final BoolSetting CLOCK_24H =
+            CLOCK.add(new BoolSetting("h24", "24 hour clock", true));
+
+    // --- Projectile path preview ---
+    public static final Module PROJECTILES = new Module("projectiles", "Projectiles",
+            "Draws where a bow shot or throwable you are holding will land.", "Render", false);
+    public static final ChoiceSetting PROJ_COLOR =
+            PROJECTILES.add(new ChoiceSetting("color", "Color", COLOR_NAMES, 2));
+
+    // --- Hide screen debuff effects ---
+    public static final Module ANTI_DEBUFF = new Module("antidebuff", "AntiDebuff",
+            "Hides the nausea wobble and the darkness pulse on your screen.", "Render", false);
+
     // --- PvP (HUD helpers that PvP clients normally ship) ---
     public static final Module CPS = new Module("cps", "CPS Counter",
             "Shows how many times per second you click.", "PvP", false);
@@ -158,9 +184,29 @@ public final class ModuleManager {
     public static final IntSetting FC_SPRINT =
             FREECAM.add(new IntSetting("sprint", "Sprint multiplier (Ctrl)", 1, 6, 2));
 
+    // --- Health display ---
+    public static final Module HEALTH = new Module("health", "Health",
+            "Shows your health (and absorption) as a number.", "Render", false);
+    public static final ChoiceSetting HEALTH_CORNER =
+            HEALTH.add(new ChoiceSetting("corner", "Corner", CORNERS, 0));
+
+    // --- Item ESP ---
+    public static final Module ITEM_ESP = new Module("itemesp", "ItemESP",
+            "Outlines dropped items near you.", "Render", false);
+    public static final ChoiceSetting IE_COLOR =
+            ITEM_ESP.add(new ChoiceSetting("color", "Color", COLOR_NAMES, 6));
+    public static final IntSetting IE_RANGE =
+            ITEM_ESP.add(new IntSetting("range", "Range", 4, 128, 32));
+    public static final BoolSetting IE_THROUGH_WALLS =
+            ITEM_ESP.add(new BoolSetting("walls", "See through walls", true));
+
     // --- Fullbright ---
     public static final Module FULLBRIGHT = new Module("fullbright", "Fullbright",
             "Makes everything fully bright, even in caves and at night.", "Render", false);
+
+    // --- Panic: switches every module off at once ---
+    public static final Module PANIC = new Module("panic", "Panic",
+            "Click to switch every module off at once (also bound to the End key).", "Utility", false);
 
     // --- Auto sprint ---
     public static final Module AUTO_SPRINT = new Module("autosprint", "Auto Sprint",
@@ -177,7 +223,7 @@ public final class ModuleManager {
             AUTO_MINE.add(new BoolSetting("look", "Look at blocks", true));
 
     public static final List<Module> ALL = List.of(
-            COORDS, FPS, ARMOR_HUD, CPS, KEYSTROKES, POTION_HUD, PING, HIGHLIGHT, NETHERITE, STORAGE_ESP, FREECAM, FULLBRIGHT, AUTO_SPRINT, AUTO_MINE);
+            COORDS, FPS, ARMOR_HUD, DIRECTION, SPEED, CLOCK, CPS, KEYSTROKES, POTION_HUD, PING, HIGHLIGHT, NETHERITE, STORAGE_ESP, ITEM_ESP, PROJECTILES, ANTI_DEBUFF, HEALTH, FREECAM, FULLBRIGHT, AUTO_SPRINT, AUTO_MINE, PANIC);
 
     private ModuleManager() {}
 

@@ -1,11 +1,14 @@
 package com.example.clientmod;
 
+import com.example.clientmod.feature.AntiDebuff;
 import com.example.clientmod.feature.AutoMine;
 import com.example.clientmod.feature.BlockHighlighter;
 import com.example.clientmod.feature.Freecam;
 import com.example.clientmod.feature.Fullbright;
 import com.example.clientmod.feature.Hud;
+import com.example.clientmod.feature.ItemEsp;
 import com.example.clientmod.feature.NetheriteFinder;
+import com.example.clientmod.feature.Projectiles;
 import com.example.clientmod.feature.StorageEsp;
 import com.example.clientmod.gui.ModMenuScreen;
 import com.example.clientmod.module.ModuleManager;
@@ -30,10 +33,11 @@ public class MyClientMod implements ClientModInitializer {
     private static KeyBinding greetKey;
     private static KeyBinding menuKey;
     private static KeyBinding freecamKey;
+    private static KeyBinding panicKey;
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("My Client Mod 1.14.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
+        LOGGER.info("My Client Mod 1.16.0 loaded (modules: HUD, armor HUD, fullbright, block highlight)");
 
         ModuleManager.load();
 
@@ -61,10 +65,28 @@ public class MyClientMod implements ClientModInitializer {
                 "category.myclientmod"
         ));
 
+        // Press End to switch every module off at once (rebindable in Controls)
+        panicKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.myclientmod.panic",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_END,
+                "category.myclientmod"
+        ));
+
         // Freecam runs at the start of the tick, before the player reads the movement keys
         ClientTickEvents.START_CLIENT_TICK.register(Freecam::tick);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (panicKey.wasPressed()) {
+                ModuleManager.PANIC.setEnabled(true);
+            }
+            if (ModuleManager.PANIC.isEnabled()) {
+                for (com.example.clientmod.module.Module m : ModuleManager.ALL) {
+                    m.setEnabled(false); // includes Panic itself, so it acts once
+                }
+                ModuleManager.save();
+            }
+
             while (freecamKey.wasPressed()) {
                 ModuleManager.FREECAM.toggle();
                 ModuleManager.save();
@@ -87,12 +109,15 @@ public class MyClientMod implements ClientModInitializer {
             NetheriteFinder.tick(client);
             AutoMine.tick(client);
             StorageEsp.tick(client);
+            AntiDebuff.tick(client);
         });
 
         HudRenderCallback.EVENT.register((context, tickCounter) -> Hud.render(context));
         WorldRenderEvents.LAST.register(BlockHighlighter::render);
         WorldRenderEvents.LAST.register(NetheriteFinder::render);
         WorldRenderEvents.LAST.register(StorageEsp::render);
+        WorldRenderEvents.LAST.register(ItemEsp::render);
+        WorldRenderEvents.LAST.register(Projectiles::render);
     }
 
     private static void tickAutoSprint(MinecraftClient client) {

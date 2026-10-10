@@ -7,4 +7,4 @@ if not exist gradlew.bat (
 )
 call gradlew.bat build || exit /b 1
 echo.
-echo Done. Your jar: build\libs\my-client-mod-1.14.0.jar
+echo Done. Your jar: build\libs\my-client-mod-1.16.0.jar

@@ -2,5 +2,6 @@
   "key.myclientmod.greet": "Send Greeting",
   "key.myclientmod.menu": "Open Module Menu",
   "key.myclientmod.freecam": "Toggle Freecam",
+  "key.myclientmod.panic": "Panic (switch all modules off)",
   "category.myclientmod": "My Client Mod"
 }

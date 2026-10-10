@@ -7,6 +7,10 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 
+import net.minecraft.util.math.Vec3d;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -16,6 +20,10 @@ public final class Hud {
     private static final EquipmentSlot[] ARMOR_SLOTS = {
             EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
     };
+
+    private static Vec3d lastPos = null;
+    private static long lastNanos = 0;
+    private static double speedBps = 0;
 
     private Hud() {}
 
@@ -47,6 +55,46 @@ public final class Hud {
                     : "Netherite: chunk " + m.chunkX() + ", " + m.chunkZ() + " (" + m.count() + " debris, "
                             + NetheriteFinder.distanceTo(client, m) + " blocks)";
             drawInfo(context, client, text, ModuleManager.NF_CORNER.get(), used);
+        }
+
+        if (ModuleManager.DIRECTION.isEnabled()) {
+            net.minecraft.util.math.Direction facing = client.player.getHorizontalFacing();
+            String axis = switch (facing) {
+                case NORTH -> "North (-Z)";
+                case SOUTH -> "South (+Z)";
+                case EAST -> "East (+X)";
+                default -> "West (-X)";
+            };
+            drawInfo(context, client, "Facing: " + axis, ModuleManager.DIRECTION_CORNER.get(), used);
+        }
+
+        if (ModuleManager.SPEED.isEnabled()) {
+            long now = System.nanoTime();
+            Vec3d pos = client.player.getPos();
+            if (lastPos != null && now > lastNanos) {
+                double dt = (now - lastNanos) / 1.0e9;
+                double dx = pos.x - lastPos.x, dz = pos.z - lastPos.z;
+                double instant = Math.sqrt(dx * dx + dz * dz) / dt;
+                speedBps = speedBps * 0.9 + Math.min(instant, 200) * 0.1;
+            }
+            lastPos = pos;
+            lastNanos = now;
+            drawInfo(context, client, String.format(Locale.ROOT, "Speed: %.1f b/s", speedBps),
+                    ModuleManager.SPEED_CORNER.get(), used);
+        }
+
+        if (ModuleManager.CLOCK.isEnabled()) {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern(ModuleManager.CLOCK_24H.get() ? "HH:mm" : "h:mm a",
+                    Locale.ROOT);
+            drawInfo(context, client, LocalTime.now().format(fmt), ModuleManager.CLOCK_CORNER.get(), used);
+        }
+
+        if (ModuleManager.HEALTH.isEnabled()) {
+            float hp = client.player.getHealth();
+            float abs = client.player.getAbsorptionAmount();
+            String text = String.format(Locale.ROOT, "Health: %.1f / %.0f", hp, client.player.getMaxHealth())
+                    + (abs > 0 ? String.format(Locale.ROOT, " (+%.1f)", abs) : "");
+            drawInfo(context, client, text, ModuleManager.HEALTH_CORNER.get(), used);
         }
 
         PvpHud.render(context, client, used);
